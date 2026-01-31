@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>柴燒窯登記與查詢系統</title>
+    <!-- 引入 Bootstrap 5 (為了讓手機版好看，按鈕大好按) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 引入 Font Awesome (圖示) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f0f2f5; font-family: "Microsoft JhengHei", sans-serif; }
+        .main-container { max-width: 600px; margin: 20px auto; background: white; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; }
+        
+        /* 頁籤樣式 */
+        .nav-tabs .nav-link { color: #495057; border: none; padding: 15px; font-weight: bold; }
+        .nav-tabs .nav-link.active { color: #d35400; border-bottom: 3px solid #d35400; background: none; }
+        .nav-tabs { border-bottom: 2px solid #e9ecef; }
+        
+        /* 表單與卡片 */
+        .form-control:focus { border-color: #d35400; box-shadow: 0 0 0 0.25rem rgba(211, 84, 0, 0.25); }
+        .btn-primary { background-color: #d35400; border-color: #d35400; }
+        .btn-primary:hover { background-color: #a04000; border-color: #a04000; }
+        
+        /* 狀態燈號 */
+        .status-badge { font-size: 0.85em; padding: 5px 12px; border-radius: 15px; display: inline-block; }
+        .bg-pending { background-color: #e9ecef; color: #495057; } /* 收到申請 */
+        .bg-scheduling { background-color: #cff4fc; color: #055160; } /* 排程中 */
+        .bg-firing { background-color: #fff3cd; color: #664d03; border: 1px solid #ffecb5; } /* 燒窯中 */
+        .bg-done { background-color: #d1e7dd; color: #0f5132; } /* 完工 */
+
+        /* 響應式微調 */
+        .result-card { border-left: 5px solid #d35400; background: #fff; margin-bottom: 15px; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="main-container">
+        <!-- 頂部標題 -->
+        <div class="text-center p-4 bg-light">
+            <h3 class="mb-0"><i class="fa-solid fa-fire-burner text-danger"></i> 柴燒窯進度系統</h3>
+            <p class="text-muted small mt-2 mb-0">登記作品與查詢燒製進度</p>
+        </div>
+
+        <!-- 切換頁籤 -->
+        <ul class="nav nav-tabs nav-fill" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button"><i class="fa-solid fa-pen-to-square"></i> 我要登記</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="search-tab" data-bs-toggle="tab" data-bs-target="#search" type="button"><i class="fa-solid fa-magnifying-glass"></i> 進度查詢</button>
+            </li>
+        </ul>
+
+        <div class="tab-content p-4" id="myTabContent">
+            
+            <!-- 分頁 1: 登記表單 -->
+            <div class="tab-pane fade show active" id="register" role="tabpanel">
+                <form id="regForm" onsubmit="submitForm(event)">
+                    <div class="mb-3">
+                        <label class="form-label">姓名</label>
+                        <input type="text" name="name" class="form-control" required placeholder="請輸入姓名">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">電話 (查詢依據)</label>
+                        <input type="tel" name="phone" class="form-control" required placeholder="09xxxxxxxx" pattern="[0-9]{10}">
+                        <div class="form-text">請輸入10碼手機號碼，後續以此號碼查詢進度。</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">村莊 / 聚落</label>
+                        <select name="village" class="form-select">
+                            <option value="中和">中和</option>
+                            <option value="永和">永和</option>
+                            <option value="東湖">東湖</option>
+                            <option value="西湖">西湖</option>
+                            <option value="酒豐">酒豐</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">品項與備註</label>
+                        <textarea name="item_desc" class="form-control" rows="3" placeholder="例如：茶壺 2 個、花瓶 1 個 (需注意把手)"></textarea>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" id="submitBtn" class="btn btn-primary btn-lg">送出登記</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 分頁 2: 查詢介面 -->
+            <div class="tab-pane fade" id="search" role="tabpanel">
+                <div class="input-group mb-3">
+                    <input type="tel" id="searchPhone" class="form-control form-control-lg" placeholder="輸入手機號碼查詢">
+                    <button class="btn btn-outline-secondary" type="button" onclick="searchData()">搜尋</button>
+                </div>
+                
+                <div id="resultArea">
+                    <!-- 查詢結果會出現在這裡 -->
+                    <div class="text-center text-muted py-5">
+                        <i class="fa-regular fa-id-card fa-3x mb-3"></i>
+                        <p>輸入電話後點擊搜尋</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal: 訊息提示框 -->
+<div class="modal fade" id="msgModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="msgTitle">提示</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="msgBody"></div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // ★ 您的 GAS 部署網址 ★
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwjAmKtz3bspFfJ3gt1i3Ij01gkRYQMb1cnU-WL737t9jBy_GrGQt-irPwjZ3gArMRb/exec";
+
+    // 顯示訊息 Modal
+    const msgModal = new bootstrap.Modal(document.getElementById('msgModal'));
+    function showMsg(title, body) {
+        document.getElementById('msgTitle').innerText = title;
+        document.getElementById('msgBody').innerHTML = body;
+        msgModal.show();
+    }
+
+    // --- 功能 1: 提交登記 (POST) ---
+    function submitForm(e) {
+        e.preventDefault(); // 阻止表單跳轉
+        const btn = document.getElementById('submitBtn');
+        const form = document.getElementById('regForm');
+        
+        // 取得表單資料
+        const formData = new FormData(form);
+        const data = {};
+        formData.forEach((value, key) => data[key] = value);
+
+        // UI 鎖定
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> 處理中...';
+
+        // 這裡使用 'text/plain' 避開 Google Apps Script 的 CORS 選項請求問題
+        fetch(GAS_URL, {
+            method: "POST",
+            body: JSON.stringify(data),
+            headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        })
+        .then(response => response.json())
+        .then(result => {
+            if(result.result === "success") {
+                showMsg("登記成功", "您的資料已送出，請使用電話號碼查詢進度。");
+                form.reset(); // 清空表單
+                // 自動切換到查詢頁籤
+                document.querySelector('#search-tab').click();
+                document.getElementById('searchPhone').value = data.phone;
+            } else {
+                showMsg("錯誤", "系統發生錯誤，請稍後再試。" + JSON.stringify(result));
+            }
+        })
+        .catch(error => {
+            showMsg("連線失敗", "無法連接到伺服器：" + error);
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerText = "送出登記";
+        });
+    }
+
+    // --- 功能 2: 查詢資料 (GET) ---
+    function searchData() {
+        const phone = document.getElementById('searchPhone').value.trim();
+        const resultArea = document.getElementById('resultArea');
+
+        if (!phone) {
+            showMsg("提示", "請輸入電話號碼");
+            return;
+        }
+
+        resultArea.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2">查詢資料庫中...</p></div>';
+
+        fetch(`${GAS_URL}?phone=${phone}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.length === 0) {
+                resultArea.innerHTML = `
+                    <div class="alert alert-warning text-center" role="alert">
+                        <i class="fa-solid fa-circle-exclamation"></i> 查無此電話資料 (${phone})<br>
+                        請確認號碼是否正確，或前往登記。
+                    </div>`;
+                return;
+            }
+            renderResults(data);
+        })
+        .catch(error => {
+            resultArea.innerHTML = `<div class="alert alert-danger">查詢失敗：${error}</div>`;
+        });
+    }
+
+    // 渲染查詢結果列表
+    function renderResults(data) {
+        const resultArea = document.getElementById('resultArea');
+        let html = '';
+
+        data.forEach(item => {
+            // 狀態顏色判斷
+            let statusClass = 'bg-pending';
+            let icon = 'fa-clipboard-list';
+            
+            if (item.status.includes('排程')) { statusClass = 'bg-scheduling'; icon = 'fa-calendar-days'; }
+            if (item.status.includes('燒窯')) { statusClass = 'bg-firing'; icon = 'fa-fire'; }
+            if (item.status.includes('完工')) { statusClass = 'bg-done'; icon = 'fa-check'; }
+
+            html += `
+            <div class="result-card">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="mb-0 fw-bold text-dark">${item.name} <small class="text-muted" style="font-size:0.6em">(${item.village})</small></h5>
+                    <span class="status-badge ${statusClass}"><i class="fa-solid ${icon}"></i> ${item.status}</span>
+                </div>
+                
+                <div class="bg-light p-2 rounded mb-2 text-secondary small">
+                    <i class="fa-solid fa-box-open"></i> ${item.item || '無備註品項'}
+                </div>
+
+                <div class="row g-2 mt-2" style="font-size: 0.9em;">
+                    <div class="col-6">
+                        <span class="text-muted d-block">開工日期</span>
+                        <span class="fw-bold">${item.start_date || '-'}</span>
+                    </div>
+                    <div class="col-6">
+                        <span class="text-muted d-block">燒窯日期</span>
+                        <span class="fw-bold text-danger">${item.fire_date || '-'}</span>
+                    </div>
+                </div>
+            </div>`;
+        });
+
+        resultArea.innerHTML = `<p class="text-muted small mb-3">共找到 ${data.length} 筆資料：</p>` + html;
+    }
+</script>
+
+</body>
+</html>
