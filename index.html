@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>柴燒窯登記系統</title>
+    
+    <!-- PWA / 手機優化設定 -->
+    <meta name="theme-color" content="#d35400">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- 自動生成的「窯」字圖示 (SVG Data URI) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23d35400%22 rx=%2220%22/><text x=%2250%22 y=%2262%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 font-weight=%22bold%22>窯</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23d35400%22 rx=%2220%22/><text x=%2250%22 y=%2262%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 font-weight=%22bold%22>窯</text></svg>">
+
+    <!-- 引入 Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 引入 Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        body { background-color: #f0f2f5; font-family: "Microsoft JhengHei", sans-serif; -webkit-tap-highlight-color: transparent; }
+        .main-container { max-width: 600px; margin: 0 auto; background: white; min-height: 100vh; box-shadow: 0 0 15px rgba(0,0,0,0.05); }
+        @media(min-width: 600px) { .main-container { margin: 30px auto; min-height: auto; border-radius: 15px; } }
+        
+        /* 頁籤樣式優化 */
+        .nav-tabs .nav-link { color: #6c757d; border: none; padding: 15px; font-weight: bold; background: #f8f9fa; border-bottom: 2px solid transparent; }
+        .nav-tabs .nav-link.active { color: #d35400; background: white; border-bottom: 3px solid #d35400; }
+        
+        /* 狀態燈號 */
+        .status-badge { font-size: 0.85em; padding: 5px 12px; border-radius: 15px; display: inline-block; }
+        .bg-pending { background-color: #e9ecef; color: #495057; }
+        .bg-scheduling { background-color: #cff4fc; color: #055160; }
+        .bg-firing { background-color: #fff3cd; color: #664d03; border: 1px solid #ffecb5; }
+        .bg-done { background-color: #d1e7dd; color: #0f5132; }
+
+        .result-card { border-left: 5px solid #d35400; background: #fff; margin-bottom: 15px; padding: 15px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <!-- 頂部標題 -->
+    <div class="text-center p-4 bg-white border-bottom">
+        <h3 class="mb-0 fw-bold" style="color: #d35400;"><i class="fa-solid fa-fire-burner"></i> 柴燒窯進度</h3>
+    </div>
+
+    <!-- 切換頁籤 -->
+    <ul class="nav nav-tabs nav-fill sticky-top bg-white" id="myTab" role="tablist" style="z-index: 100;">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button"><i class="fa-solid fa-pen"></i> 登記</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="search-tab" data-bs-toggle="tab" data-bs-target="#search" type="button"><i class="fa-solid fa-search"></i> 查詢</button>
+        </li>
+    </ul>
+
+    <div class="tab-content p-4" id="myTabContent">
+        
+        <!-- 分頁 1: 登記表單 -->
+        <div class="tab-pane fade show active" id="register" role="tabpanel">
+            <form id="regForm" onsubmit="submitForm(event)">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">姓名</label>
+                    <input type="text" name="name" class="form-control form-control-lg" required placeholder="您的姓名">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">電話</label>
+                    <input type="tel" name="phone" class="form-control form-control-lg" required placeholder="09xxxxxxxx" pattern="[0-9]{10}" inputmode="numeric">
+                    <div class="form-text">僅供查詢進度使用</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">村莊 / 聚落</label>
+                    <select name="village" class="form-select form-select-lg">
+                        <option value="中和">中和</option>
+                        <option value="永和">永和</option>
+                        <option value="東湖">東湖</option>
+                        <option value="西湖">西湖</option>
+                        <option value="酒豐">酒豐</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">品項與備註</label>
+                    <textarea name="item_desc" class="form-control" rows="3" placeholder="例：茶壺2個..."></textarea>
+                </div>
+                <div class="d-grid mt-4">
+                    <button type="submit" id="submitBtn" class="btn btn-primary btn-lg" style="background-color: #d35400; border: none;">送出登記</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 分頁 2: 查詢介面 -->
+        <div class="tab-pane fade" id="search" role="tabpanel">
+            <div class="input-group mb-4">
+                <input type="tel" id="searchPhone" class="form-control form-control-lg" placeholder="輸入電話查詢" inputmode="numeric">
+                <button class="btn btn-dark" type="button" onclick="searchData()">搜尋</button>
+            </div>
+            
+            <div id="resultArea">
+                <div class="text-center text-muted py-5 opacity-50">
+                    <i class="fa-regular fa-id-card fa-4x mb-3"></i>
+                    <p>輸入電話後查詢</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="msgModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <h5 class="modal-title mb-3 fw-bold" id="msgTitle"></h5>
+                <p id="msgBody" class="mb-4"></p>
+                <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">關閉</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // ★ 您的 GAS URL ★
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwjAmKtz3bspFfJ3gt1i3Ij01gkRYQMb1cnU-WL737t9jBy_GrGQt-irPwjZ3gArMRb/exec";
+
+    const msgModal = new bootstrap.Modal(document.getElementById('msgModal'));
+    function showMsg(title, body) {
+        document.getElementById('msgTitle').innerText = title;
+        document.getElementById('msgBody').innerHTML = body;
+        msgModal.show();
+    }
+
+    function submitForm(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        const form = document.getElementById('regForm');
+        
+        const formData = new FormData(form);
+        const data = {};
+        formData.forEach((value, key) => data[key] = value);
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> 處理中...';
+
+        fetch(GAS_URL, {
+            method: "POST",
+            body: JSON.stringify(data),
+            headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        })
+        .then(response => response.json())
+        .then(result => {
+            if(result.result === "success") {
+                showMsg("✅ 登記成功", "資料已送出，請使用電話查詢進度。");
+                form.reset();
+                document.querySelector('#search-tab').click();
+                document.getElementById('searchPhone').value = data.phone;
+                searchData(); // 自動查詢
+            } else {
+                showMsg("❌ 錯誤", "系統發生錯誤，請稍後再試。");
+            }
+        })
+        .catch(error => showMsg("⚠️ 連線失敗", error))
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerText = "送出登記";
+        });
+    }
+
+    function searchData() {
+        const phone = document.getElementById('searchPhone').value.trim();
+        const resultArea = document.getElementById('resultArea');
+
+        if (!phone) { showMsg("提示", "請輸入電話號碼"); return; }
+
+        resultArea.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-warning"></div></div>';
+
+        fetch(`${GAS_URL}?phone=${phone}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.length === 0) {
+                resultArea.innerHTML = `<div class="alert alert-secondary text-center">查無資料 (${phone})<br>請確認號碼或前往登記。</div>`;
+                return;
+            }
+            renderResults(data);
+        })
+        .catch(error => resultArea.innerHTML = `<div class="alert alert-danger">查詢失敗</div>`);
+    }
+
+    function renderResults(data) {
+        let html = '';
+        data.forEach(item => {
+            let statusClass = 'bg-pending';
+            let icon = 'fa-clipboard-list';
+            if (item.status.includes('排程')) { statusClass = 'bg-scheduling'; icon = 'fa-calendar-days'; }
+            if (item.status.includes('燒窯')) { statusClass = 'bg-firing'; icon = 'fa-fire'; }
+            if (item.status.includes('完工')) { statusClass = 'bg-done'; icon = 'fa-check'; }
+
+            html += `
+            <div class="result-card">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="mb-0 fw-bold">${item.name} <small class="text-muted">(${item.village})</small></h5>
+                    <span class="status-badge ${statusClass}"><i class="fa-solid ${icon}"></i> ${item.status}</span>
+                </div>
+                <div class="bg-light p-2 rounded mb-2 text-secondary small">
+                    <i class="fa-solid fa-box-open"></i> ${item.item || '無備註'}
+                </div>
+                <div class="row g-2 mt-2 small">
+                    <div class="col-6"><span class="text-muted d-block">開工日</span><span class="fw-bold">${item.start_date || '-'}</span></div>
+                    <div class="col-6"><span class="text-muted d-block">燒窯日</span><span class="fw-bold text-danger">${item.fire_date || '-'}</span></div>
+                </div>
+            </div>`;
+        });
+        document.getElementById('resultArea').innerHTML = `<p class="text-muted small mb-2">找到 ${data.length} 筆紀錄：</p>` + html;
+    }
+</script>
+
+</body>
+</html>
