@@ -7,6 +7,7 @@
     
     <!-- PWA / 手機優化設定 -->
     <meta name="theme-color" content="#d35400">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
@@ -97,7 +98,7 @@
                     <input type="text" id="addressDetail" class="form-control" placeholder="詳細地址 (如：12號、廟口旁)">
                 </div>
 
-                <!-- 新增：日期欄位 -->
+                <!-- 日期欄位 -->
                 <div class="row g-2 mb-3">
                     <div class="col-6">
                         <label class="form-label fw-bold">開工日期</label>
@@ -202,7 +203,7 @@
         const btn = document.getElementById('submitBtn');
         const form = document.getElementById('regForm');
         
-        // 抓取表單基本資料 (此時會自動抓取 start_date 和 fire_date)
+        // 抓取表單基本資料
         const formData = new FormData(form);
         const data = {};
         formData.forEach((value, key) => data[key] = value);
@@ -228,7 +229,6 @@
                 form.reset();
                 document.getElementById("addressDetail").value = ""; 
                 updateSettlements();
-                // 登記成功後，自動切換到查詢並執行
                 document.querySelector('#search-tab').click();
                 document.getElementById('searchPhone').value = data.phone;
                 searchData(); 
