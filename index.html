@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
-    <!-- 自動生成的「窯」字圖示 (SVG Data URI) -->
+    <!-- 自動生成的「窯」字圖示 -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23d35400%22 rx=%2220%22/><text x=%2250%22 y=%2262%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 font-weight=%22bold%22>窯</text></svg>">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23d35400%22 rx=%2220%22/><text x=%2250%22 y=%2262%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 font-weight=%22bold%22>窯</text></svg>">
 
@@ -70,20 +70,48 @@
                     <input type="tel" name="phone" class="form-control form-control-lg" required placeholder="09xxxxxxxx" pattern="[0-9]{10}" inputmode="numeric">
                     <div class="form-text">僅供查詢進度使用</div>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold">村莊 / 聚落</label>
-                    <select name="village" class="form-select form-select-lg">
-                        <option value="中和">中和</option>
-                        <option value="永和">永和</option>
-                        <option value="東湖">東湖</option>
-                        <option value="西湖">西湖</option>
-                        <option value="酒豐">酒豐</option>
-                        <option value="其他">其他</option>
-                    </select>
+                
+                <!-- 村莊與聚落連動選單 -->
+                <div class="row g-2 mb-2">
+                    <div class="col-6">
+                        <label class="form-label fw-bold">村別</label>
+                        <select id="villageSelect" class="form-select form-select-lg" onchange="updateSettlements()">
+                            <option value="中和">中和村</option>
+                            <option value="平和">平和村</option>
+                            <option value="東湖">東湖村</option>
+                            <option value="西湖">西湖村</option>
+                            <option value="海豐">海豐村</option>
+                            <option value="南港">南港村</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-bold">聚落</label>
+                        <select id="settlementSelect" class="form-select form-select-lg">
+                            <!-- 這裡會由 JavaScript 自動產生 -->
+                        </select>
+                    </div>
                 </div>
+
+                <!-- 詳細地址欄位 -->
                 <div class="mb-3">
-                    <label class="form-label fw-bold">品項與備註</label>
-                    <textarea name="item_desc" class="form-control" rows="3" placeholder="例：茶壺2個..."></textarea>
+                    <input type="text" id="addressDetail" class="form-control" placeholder="詳細地址 (如：12號、廟口旁)">
+                </div>
+
+                <!-- 新增：日期欄位 -->
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label fw-bold">開工日期</label>
+                        <input type="date" name="start_date" class="form-control">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-bold">燒窯日期</label>
+                        <input type="date" name="fire_date" class="form-control">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">備註</label>
+                    <textarea name="item_desc" class="form-control" rows="3" placeholder="例：茶壺2個、需注意把手..."></textarea>
                 </div>
                 <div class="d-grid mt-4">
                     <button type="submit" id="submitBtn" class="btn btn-primary btn-lg" style="background-color: #d35400; border: none;">送出登記</button>
@@ -128,6 +156,40 @@
     // ★ 您的 GAS URL ★
     const GAS_URL = "https://script.google.com/macros/s/AKfycbwjAmKtz3bspFfJ3gt1i3Ij01gkRYQMb1cnU-WL737t9jBy_GrGQt-irPwjZ3gArMRb/exec";
 
+    // --- 村莊與聚落的對照資料 ---
+    const villageData = {
+        "中和": ["中和", "西崎頭", "埔內"],
+        "平和": ["下茄埕", "頂茄埕"],
+        "東湖": ["東湖", "頂隙", "淮美", "古合", "東北灣", "大崎"],
+        "西湖": ["西北灣", "山腳仔", "西墘", "西埔"],
+        "海豐": ["下宮", "圍內", "三塊厝", "東崎頭"],
+        "南港": ["西南", "南滬頭", "月鯉", "崎頭", "城內", "尖山腳", "南滬"]
+    };
+
+    function updateSettlements() {
+        const vSelect = document.getElementById("villageSelect");
+        const sSelect = document.getElementById("settlementSelect");
+        const selectedVillage = vSelect.value;
+        
+        // 清空聚落選單
+        sSelect.innerHTML = "";
+
+        // 根據選到的村，抓出對應的聚落陣列
+        const settlements = villageData[selectedVillage] || [selectedVillage];
+
+        settlements.forEach(s => {
+            const option = document.createElement("option");
+            option.value = s;
+            option.text = s;
+            sSelect.add(option);
+        });
+    }
+
+    // 初始化：網頁載入時執行一次，確保預設有選項
+    document.addEventListener("DOMContentLoaded", function() {
+        updateSettlements();
+    });
+
     const msgModal = new bootstrap.Modal(document.getElementById('msgModal'));
     function showMsg(title, body) {
         document.getElementById('msgTitle').innerText = title;
@@ -140,9 +202,16 @@
         const btn = document.getElementById('submitBtn');
         const form = document.getElementById('regForm');
         
+        // 抓取表單基本資料 (此時會自動抓取 start_date 和 fire_date)
         const formData = new FormData(form);
         const data = {};
         formData.forEach((value, key) => data[key] = value);
+
+        // ★ 組合 村莊 + 聚落 + 詳細地址 ★
+        const v = document.getElementById("villageSelect").value;
+        const s = document.getElementById("settlementSelect").value;
+        const addr = document.getElementById("addressDetail").value.trim();
+        data.village = `${v} (${s}) ${addr}`;
 
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> 處理中...';
@@ -157,9 +226,12 @@
             if(result.result === "success") {
                 showMsg("✅ 登記成功", "資料已送出，請使用電話查詢進度。");
                 form.reset();
+                document.getElementById("addressDetail").value = ""; 
+                updateSettlements();
+                // 登記成功後，自動切換到查詢並執行
                 document.querySelector('#search-tab').click();
                 document.getElementById('searchPhone').value = data.phone;
-                searchData(); // 自動查詢
+                searchData(); 
             } else {
                 showMsg("❌ 錯誤", "系統發生錯誤，請稍後再試。");
             }
