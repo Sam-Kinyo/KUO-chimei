@@ -205,10 +205,10 @@
         const data = {};
         formData.forEach((value, key) => data[key] = value);
 
-        const v = document.getElementById("villageSelect").value;
-        const s = document.getElementById("settlementSelect").value;
-        const addr = document.getElementById("addressDetail").value.trim();
-        data.village = `${v} (${s}) ${addr}`;
+        // ★ 修改：拆分村莊、聚落、地址為獨立欄位 ★
+        data.village = document.getElementById("villageSelect").value;
+        data.settlement = document.getElementById("settlementSelect").value;
+        data.address = document.getElementById("addressDetail").value.trim();
 
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> 處理中...';
@@ -229,7 +229,6 @@
                 document.getElementById('searchPhone').value = data.phone;
                 searchData(); 
             } else {
-                // ★ 這裡修改為顯示詳細錯誤 ★
                 console.error("後端錯誤:", result);
                 showMsg("❌ 登記失敗", "錯誤原因：<br>" + (result.error || JSON.stringify(result)));
             }
