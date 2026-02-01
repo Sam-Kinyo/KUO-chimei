@@ -4,75 +4,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>柴燒窯登記系統</title>
-    
-    <!-- PWA / 手機優化設定 -->
     <meta name="theme-color" content="#d35400">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
-    <!-- 自動生成的「窯」字圖示 -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23d35400%22 rx=%2220%22/><text x=%2250%22 y=%2262%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 font-weight=%22bold%22>窯</text></svg>">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23d35400%22 rx=%2220%22/><text x=%2250%22 y=%2262%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 font-weight=%22bold%22>窯</text></svg>">
-
-    <!-- 引入 Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- 引入 Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
     <style>
         body { background-color: #f0f2f5; font-family: "Microsoft JhengHei", sans-serif; -webkit-tap-highlight-color: transparent; }
         .main-container { max-width: 600px; margin: 0 auto; background: white; min-height: 100vh; box-shadow: 0 0 15px rgba(0,0,0,0.05); }
         @media(min-width: 600px) { .main-container { margin: 30px auto; min-height: auto; border-radius: 15px; } }
-        
-        /* 頁籤樣式優化 */
         .nav-tabs .nav-link { color: #6c757d; border: none; padding: 15px; font-weight: bold; background: #f8f9fa; border-bottom: 2px solid transparent; }
         .nav-tabs .nav-link.active { color: #d35400; background: white; border-bottom: 3px solid #d35400; }
-        
-        /* 狀態燈號 */
         .status-badge { font-size: 0.85em; padding: 5px 12px; border-radius: 15px; display: inline-block; }
         .bg-pending { background-color: #e9ecef; color: #495057; }
         .bg-scheduling { background-color: #cff4fc; color: #055160; }
         .bg-firing { background-color: #fff3cd; color: #664d03; border: 1px solid #ffecb5; }
         .bg-done { background-color: #d1e7dd; color: #0f5132; }
-
-        .result-card { border-left: 5px solid #d35400; background: #fff; margin-bottom: 15px; padding: 15px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+        .result-card { border-left: 5px solid #d35400; background: #fff; margin-bottom: 15px; padding: 15px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); position: relative;}
+        .btn-edit { position: absolute; top: 10px; right: 10px; color: #6c757d; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="main-container">
-    <!-- 頂部標題 -->
     <div class="text-center p-4 bg-white border-bottom">
         <h3 class="mb-0 fw-bold" style="color: #d35400;"><i class="fa-solid fa-fire-burner"></i> 柴燒窯進度</h3>
     </div>
 
-    <!-- 切換頁籤 -->
     <ul class="nav nav-tabs nav-fill sticky-top bg-white" id="myTab" role="tablist" style="z-index: 100;">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button"><i class="fa-solid fa-pen"></i> 登記</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="search-tab" data-bs-toggle="tab" data-bs-target="#search" type="button"><i class="fa-solid fa-search"></i> 查詢</button>
-        </li>
+        <li class="nav-item"><button class="nav-link active" id="register-tab" data-bs-toggle="tab" data-bs-target="#register"><i class="fa-solid fa-pen"></i> 登記</button></li>
+        <li class="nav-item"><button class="nav-link" id="search-tab" data-bs-toggle="tab" data-bs-target="#search"><i class="fa-solid fa-search"></i> 查詢</button></li>
     </ul>
 
     <div class="tab-content p-4" id="myTabContent">
-        
-        <!-- 分頁 1: 登記表單 -->
-        <div class="tab-pane fade show active" id="register" role="tabpanel">
+        <!-- 登記表單 -->
+        <div class="tab-pane fade show active" id="register">
             <form id="regForm" onsubmit="submitForm(event)">
                 <div class="mb-3">
                     <label class="form-label fw-bold">姓名</label>
-                    <input type="text" name="name" class="form-control form-control-lg" required placeholder="您的姓名">
+                    <input type="text" name="name" class="form-control form-control-lg" required>
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-bold">電話</label>
-                    <input type="tel" name="phone" class="form-control form-control-lg" required placeholder="09xxxxxxxx" pattern="[0-9]{10}" inputmode="numeric">
-                    <div class="form-text">僅供查詢進度使用</div>
+                    <input type="tel" name="phone" class="form-control form-control-lg" required pattern="[0-9]{10}">
                 </div>
-                
-                <!-- 村莊與聚落連動選單 -->
                 <div class="row g-2 mb-2">
                     <div class="col-6">
                         <label class="form-label fw-bold">村別</label>
@@ -87,32 +65,16 @@
                     </div>
                     <div class="col-6">
                         <label class="form-label fw-bold">聚落</label>
-                        <select id="settlementSelect" class="form-select form-select-lg">
-                            <!-- 這裡會由 JavaScript 自動產生 -->
-                        </select>
+                        <select id="settlementSelect" class="form-select form-select-lg"></select>
                     </div>
                 </div>
-
-                <!-- 詳細地址欄位 -->
                 <div class="mb-3">
-                    <input type="text" id="addressDetail" class="form-control" placeholder="詳細地址 (如：12號、廟口旁)">
+                    <input type="text" id="addressDetail" class="form-control" placeholder="詳細地址">
                 </div>
-
-                <!-- 日期欄位 -->
-                <div class="row g-2 mb-3">
-                    <div class="col-6">
-                        <label class="form-label fw-bold">開工日期</label>
-                        <input type="date" name="start_date" class="form-control">
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label fw-bold">燒窯日期</label>
-                        <input type="date" name="fire_date" class="form-control">
-                    </div>
-                </div>
-
+                <!-- 移除了日期輸入 -->
                 <div class="mb-3">
                     <label class="form-label fw-bold">備註</label>
-                    <textarea name="item_desc" class="form-control" rows="3" placeholder="例：茶壺2個、需注意把手..."></textarea>
+                    <textarea name="item_desc" class="form-control" rows="3"></textarea>
                 </div>
                 <div class="d-grid mt-4">
                     <button type="submit" id="submitBtn" class="btn btn-primary btn-lg" style="background-color: #d35400; border: none;">送出登記</button>
@@ -120,32 +82,57 @@
             </form>
         </div>
 
-        <!-- 分頁 2: 查詢介面 -->
-        <div class="tab-pane fade" id="search" role="tabpanel">
+        <!-- 查詢介面 -->
+        <div class="tab-pane fade" id="search">
             <div class="input-group mb-4">
-                <input type="tel" id="searchPhone" class="form-control form-control-lg" placeholder="輸入電話查詢" inputmode="numeric">
+                <input type="tel" id="searchPhone" class="form-control form-control-lg" placeholder="輸入電話查詢">
                 <button class="btn btn-dark" type="button" onclick="searchData()">搜尋</button>
             </div>
-            
             <div id="resultArea">
-                <div class="text-center text-muted py-5 opacity-50">
-                    <i class="fa-regular fa-id-card fa-4x mb-3"></i>
-                    <p>輸入電話後查詢</p>
-                </div>
+                <div class="text-center text-muted py-5 opacity-50"><i class="fa-regular fa-id-card fa-4x mb-3"></i><p>輸入電話後查詢</p></div>
             </div>
         </div>
-
     </div>
 </div>
 
-<!-- Modal -->
+<!-- Modal: 管理編輯 -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">管理設定</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editPhone">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">開工日期</label>
+                    <input type="date" id="editStart" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">燒窯日期</label>
+                    <input type="date" id="editFire" class="form-control">
+                </div>
+                <div class="form-check form-switch p-3 border rounded bg-light">
+                    <input class="form-check-input" type="checkbox" id="editCompleted" style="transform: scale(1.3); margin-right: 10px;">
+                    <label class="form-check-label fw-bold" for="editCompleted">已完工 (通知取件)</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-success" onclick="saveUpdate()">儲存更新</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: 訊息 -->
 <div class="modal fade" id="msgModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-body text-center p-4">
                 <h5 class="modal-title mb-3 fw-bold" id="msgTitle"></h5>
-                <!-- 這裡會顯示詳細錯誤訊息 -->
-                <p id="msgBody" class="mb-4 text-break" style="text-align: left;"></p> 
+                <p id="msgBody" class="mb-4 text-break"></p>
                 <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">關閉</button>
             </div>
         </div>
@@ -155,41 +142,19 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    // ★ 您的 GAS URL ★
     const GAS_URL = "https://script.google.com/macros/s/AKfycbwjAmKtz3bspFfJ3gt1i3Ij01gkRYQMb1cnU-WL737t9jBy_GrGQt-irPwjZ3gArMRb/exec";
-
-    // --- 村莊與聚落的對照資料 ---
-    const villageData = {
-        "中和": ["中和", "西崎頭", "埔內"],
-        "平和": ["下茄埕", "頂茄埕"],
-        "東湖": ["東湖", "頂隙", "淮美", "古合", "東北灣", "大崎"],
-        "西湖": ["西北灣", "山腳仔", "西墘", "西埔"],
-        "海豐": ["下宮", "圍內", "三塊厝", "東崎頭"],
-        "南港": ["西南", "南滬頭", "月鯉", "崎頭", "城內", "尖山腳", "南滬"]
-    };
+    const villageData = { "中和": ["中和", "西崎頭", "埔內"], "平和": ["下茄埕", "頂茄埕"], "東湖": ["東湖", "頂隙", "淮美", "古合", "東北灣", "大崎"], "西湖": ["西北灣", "山腳仔", "西墘", "西埔"], "海豐": ["下宮", "圍內", "三塊厝", "東崎頭"], "南港": ["西南", "南滬頭", "月鯉", "崎頭", "城內", "尖山腳", "南滬"] };
+    const msgModal = new bootstrap.Modal(document.getElementById('msgModal'));
+    const editModal = new bootstrap.Modal(document.getElementById('editModal'));
 
     function updateSettlements() {
-        const vSelect = document.getElementById("villageSelect");
+        const v = document.getElementById("villageSelect").value;
         const sSelect = document.getElementById("settlementSelect");
-        const selectedVillage = vSelect.value;
-        
         sSelect.innerHTML = "";
-
-        const settlements = villageData[selectedVillage] || [selectedVillage];
-
-        settlements.forEach(s => {
-            const option = document.createElement("option");
-            option.value = s;
-            option.text = s;
-            sSelect.add(option);
-        });
+        (villageData[v] || [v]).forEach(s => sSelect.add(new Option(s, s)));
     }
+    document.addEventListener("DOMContentLoaded", updateSettlements);
 
-    document.addEventListener("DOMContentLoaded", function() {
-        updateSettlements();
-    });
-
-    const msgModal = new bootstrap.Modal(document.getElementById('msgModal'));
     function showMsg(title, body) {
         document.getElementById('msgTitle').innerText = title;
         document.getElementById('msgBody').innerHTML = body;
@@ -200,96 +165,90 @@
         e.preventDefault();
         const btn = document.getElementById('submitBtn');
         const form = document.getElementById('regForm');
-        
-        const formData = new FormData(form);
-        const data = {};
-        formData.forEach((value, key) => data[key] = value);
-
-        // ★ 修改：拆分村莊、聚落、地址為獨立欄位 ★
+        const data = Object.fromEntries(new FormData(form).entries());
         data.village = document.getElementById("villageSelect").value;
         data.settlement = document.getElementById("settlementSelect").value;
         data.address = document.getElementById("addressDetail").value.trim();
+        // 標記為新登記
+        data.action = "register";
 
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> 處理中...';
-
-        fetch(GAS_URL, {
-            method: "POST",
-            body: JSON.stringify(data),
-            headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        })
-        .then(response => response.json())
-        .then(result => {
-            if(result.result === "success") {
-                showMsg("✅ 登記成功", "資料已送出，請使用電話查詢進度。");
-                form.reset();
-                document.getElementById("addressDetail").value = ""; 
-                updateSettlements();
-                document.querySelector('#search-tab').click();
-                document.getElementById('searchPhone').value = data.phone;
-                searchData(); 
-            } else {
-                console.error("後端錯誤:", result);
-                showMsg("❌ 登記失敗", "錯誤原因：<br>" + (result.error || JSON.stringify(result)));
-            }
-        })
-        .catch(error => {
-            console.error("連線錯誤:", error);
-            showMsg("⚠️ 連線異常", "無法連接伺服器，可能原因：<br>1. Google Script 部署版本未更新<br>2. 網路不穩<br>詳細錯誤：" + error);
-        })
-        .finally(() => {
-            btn.disabled = false;
-            btn.innerText = "送出登記";
-        });
+        btn.disabled = true; btn.innerHTML = '處理中...';
+        fetch(GAS_URL, { method: "POST", body: JSON.stringify(data), headers: { "Content-Type": "text/plain" } })
+            .then(r => r.json()).then(res => {
+                if(res.result === "success") {
+                    showMsg("✅ 登記成功", "請使用電話查詢進度。");
+                    form.reset(); document.getElementById("addressDetail").value=""; updateSettlements();
+                    document.querySelector('#search-tab').click(); document.getElementById('searchPhone').value = data.phone; searchData();
+                } else showMsg("❌ 失敗", res.error);
+            }).catch(e => showMsg("⚠️ 連線異常", e)).finally(() => { btn.disabled = false; btn.innerText = "送出登記"; });
     }
 
     function searchData() {
         const phone = document.getElementById('searchPhone').value.trim();
-        const resultArea = document.getElementById('resultArea');
+        const area = document.getElementById('resultArea');
+        if (!phone) return showMsg("提示", "請輸入電話");
+        area.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-warning"></div></div>';
 
-        if (!phone) { showMsg("提示", "請輸入電話號碼"); return; }
-
-        resultArea.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-warning"></div></div>';
-
-        fetch(`${GAS_URL}?phone=${phone}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.length === 0) {
-                resultArea.innerHTML = `<div class="alert alert-secondary text-center">查無資料 (${phone})<br>請確認號碼或前往登記。</div>`;
-                return;
-            }
+        fetch(`${GAS_URL}?phone=${phone}`).then(r => r.json()).then(data => {
+            if (data.length === 0) return area.innerHTML = `<div class="alert alert-secondary text-center">查無資料</div>`;
             renderResults(data);
-        })
-        .catch(error => resultArea.innerHTML = `<div class="alert alert-danger">查詢失敗</div>`);
+        }).catch(e => area.innerHTML = `<div class="alert alert-danger">查詢失敗</div>`);
     }
 
     function renderResults(data) {
         let html = '';
         data.forEach(item => {
-            let statusClass = 'bg-pending';
-            let icon = 'fa-clipboard-list';
-            if (item.status.includes('排程')) { statusClass = 'bg-scheduling'; icon = 'fa-calendar-days'; }
-            if (item.status.includes('燒窯')) { statusClass = 'bg-firing'; icon = 'fa-fire'; }
-            if (item.status.includes('完工')) { statusClass = 'bg-done'; icon = 'fa-check'; }
+            let sClass = 'bg-pending', icon = 'fa-clipboard-list';
+            if (item.status.includes('燒窯') || item.status.includes('排程')) { sClass = 'bg-firing'; icon = 'fa-fire'; }
+            if (item.status.includes('完工')) { sClass = 'bg-done'; icon = 'fa-check'; }
+
+            // 把物件轉成字串藏在按鈕裡，方便編輯時讀取
+            const dataStr = encodeURIComponent(JSON.stringify(item));
 
             html += `
             <div class="result-card">
+                <div class="btn-edit" onclick="openEdit('${dataStr}')"><i class="fa-solid fa-pen-to-square"></i> 編輯</div>
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h5 class="mb-0 fw-bold">${item.name} <small class="text-muted">(${item.village})</small></h5>
-                    <span class="status-badge ${statusClass}"><i class="fa-solid ${icon}"></i> ${item.status}</span>
+                    <span class="status-badge ${sClass}"><i class="fa-solid ${icon}"></i> ${item.status}</span>
                 </div>
-                <div class="bg-light p-2 rounded mb-2 text-secondary small">
-                    <i class="fa-solid fa-box-open"></i> ${item.item || '無備註'}
-                </div>
+                <div class="bg-light p-2 rounded mb-2 text-secondary small"><i class="fa-solid fa-box-open"></i> ${item.item || '無備註'}</div>
                 <div class="row g-2 mt-2 small">
-                    <div class="col-6"><span class="text-muted d-block">開工日</span><span class="fw-bold">${item.start_date || '-'}</span></div>
-                    <div class="col-6"><span class="text-muted d-block">燒窯日</span><span class="fw-bold text-danger">${item.fire_date || '-'}</span></div>
+                    <div class="col-6"><span class="text-muted d-block">開工日</span><span class="fw-bold">${item.display_start || '-'}</span></div>
+                    <div class="col-6"><span class="text-muted d-block">燒窯日</span><span class="fw-bold text-danger">${item.display_fire || '-'}</span></div>
                 </div>
             </div>`;
         });
-        document.getElementById('resultArea').innerHTML = `<p class="text-muted small mb-2">找到 ${data.length} 筆紀錄：</p>` + html;
+        document.getElementById('resultArea').innerHTML = html;
+    }
+
+    function openEdit(dataStr) {
+        const item = JSON.parse(decodeURIComponent(dataStr));
+        document.getElementById('editPhone').value = item.phone; // 用電話當 Key
+        document.getElementById('editStart').value = item.start_date; // YYYY-MM-DD
+        document.getElementById('editFire').value = item.fire_date;   // YYYY-MM-DD
+        document.getElementById('editCompleted').checked = item.status.includes("完工");
+        editModal.show();
+    }
+
+    function saveUpdate() {
+        const data = {
+            action: "update",
+            phone: document.getElementById('editPhone').value,
+            start_date: document.getElementById('editStart').value,
+            fire_date: document.getElementById('editFire').value,
+            is_completed: document.getElementById('editCompleted').checked
+        };
+
+        fetch(GAS_URL, { method: "POST", body: JSON.stringify(data), headers: { "Content-Type": "text/plain" } })
+            .then(r => r.json()).then(res => {
+                if(res.result === "success") {
+                    editModal.hide();
+                    showMsg("✅ 更新成功", "資料已修改。");
+                    searchData(); // 重新整理列表
+                } else showMsg("❌ 失敗", res.message);
+            }).catch(e => showMsg("⚠️ 連線異常", e));
     }
 </script>
-
 </body>
 </html>
