@@ -144,7 +144,8 @@
         <div class="modal-content">
             <div class="modal-body text-center p-4">
                 <h5 class="modal-title mb-3 fw-bold" id="msgTitle"></h5>
-                <p id="msgBody" class="mb-4"></p>
+                <!-- 這裡會顯示詳細錯誤訊息 -->
+                <p id="msgBody" class="mb-4 text-break" style="text-align: left;"></p> 
                 <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">關閉</button>
             </div>
         </div>
@@ -172,10 +173,8 @@
         const sSelect = document.getElementById("settlementSelect");
         const selectedVillage = vSelect.value;
         
-        // 清空聚落選單
         sSelect.innerHTML = "";
 
-        // 根據選到的村，抓出對應的聚落陣列
         const settlements = villageData[selectedVillage] || [selectedVillage];
 
         settlements.forEach(s => {
@@ -186,7 +185,6 @@
         });
     }
 
-    // 初始化：網頁載入時執行一次，確保預設有選項
     document.addEventListener("DOMContentLoaded", function() {
         updateSettlements();
     });
@@ -203,12 +201,10 @@
         const btn = document.getElementById('submitBtn');
         const form = document.getElementById('regForm');
         
-        // 抓取表單基本資料
         const formData = new FormData(form);
         const data = {};
         formData.forEach((value, key) => data[key] = value);
 
-        // ★ 組合 村莊 + 聚落 + 詳細地址 ★
         const v = document.getElementById("villageSelect").value;
         const s = document.getElementById("settlementSelect").value;
         const addr = document.getElementById("addressDetail").value.trim();
@@ -233,10 +229,15 @@
                 document.getElementById('searchPhone').value = data.phone;
                 searchData(); 
             } else {
-                showMsg("❌ 錯誤", "系統發生錯誤，請稍後再試。");
+                // ★ 這裡修改為顯示詳細錯誤 ★
+                console.error("後端錯誤:", result);
+                showMsg("❌ 登記失敗", "錯誤原因：<br>" + (result.error || JSON.stringify(result)));
             }
         })
-        .catch(error => showMsg("⚠️ 連線失敗", error))
+        .catch(error => {
+            console.error("連線錯誤:", error);
+            showMsg("⚠️ 連線異常", "無法連接伺服器，可能原因：<br>1. Google Script 部署版本未更新<br>2. 網路不穩<br>詳細錯誤：" + error);
+        })
         .finally(() => {
             btn.disabled = false;
             btn.innerText = "送出登記";
